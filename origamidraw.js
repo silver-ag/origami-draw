@@ -6,6 +6,7 @@ var current_dot_y = false;
 var currently_drawing = false;
 var current_tool = {type:'line',subtype:'edge'};
 var lines = [];
+var dots = [];
 var arrows = 0;
 var areas = 0;
 var gridstyle = document.createElement("style");
@@ -13,6 +14,7 @@ gridstyle.innerHTML = ".dot:hover { stroke:grey; }";
 
 function initialise(target, size, grid_type, grid_density, bg) {
   lines = [];
+  dots = [];
   arrows = 0;
   areas = 0;
 
@@ -82,13 +84,17 @@ function initialise(target, size, grid_type, grid_density, bg) {
   if (grid_type == "square") {
     for (var x = 0; x < grid_density; x++) {
       for (var y = 0; y < grid_density; y++) {
-        container.grid.appendChild(make_dot((x+0.5)*(size/grid_density),(y+0.5)*(size/grid_density),true));
+        var d = make_dot((x+0.5)*(size/grid_density),(y+0.5)*(size/grid_density),true);
+        container.grid.appendChild(d);
+        dots.push(d);
       }
     }
   } else if (grid_type == "isometric") {
     for (var x = 0; x < grid_density; x++) {
       for (var y = 0; y < grid_density*2; y++) {
-        container.grid.appendChild(make_dot(((x+0.5-(0.5*(y%2)))*(0.5/Math.tan(15*Math.PI/180)))*(size/grid_density), (y+0.5)*(size/(grid_density*2)),true));
+        var d = make_dot(((x+0.5-(0.5*(y%2)))*(0.5/Math.tan(15*Math.PI/180)))*(size/grid_density), (y+0.5)*(size/(grid_density*2)),true);
+        container.grid.appendChild(d);
+        dots.push(d);
       }
     }
   }
@@ -119,6 +125,7 @@ function initialise(target, size, grid_type, grid_density, bg) {
     if (current_tool.type == 'point' && current_tool.subtype == 'freedot') {
       var newdot = make_dot(event.clientX-10,event.clientY-10,false);
       container.grid.appendChild(newdot);
+      dots.push(newdot);
     }
   };
 
@@ -174,7 +181,9 @@ function clicked_dot(dot) {
             var i = intersect(line.getAttribute("x1"),line.getAttribute("y1"),line.getAttribute("x2"),line.getAttribute("y2"),
                               currently_drawing.fromx,currently_drawing.fromy,current_dot_x,current_dot_y);
             if (i) {
-              container.grid.appendChild(make_dot(i.x,i.y,false));
+              var d = make_dot(i.x,i.y,false);
+              container.grid.appendChild(d);
+              dots.push(d);
             }});
         }
         var new_line = draw_line(currently_drawing.fromx, currently_drawing.fromy, current_dot_x, current_dot_y, current_tool.subtype);
@@ -316,8 +325,24 @@ function make_dot(x,y,grid) {
   var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
   dot.setAttribute("class", "dot");
   dot.setAttribute("r", 4.5);
-  dot.setAttribute("cx", x);
-  dot.setAttribute("cy", y);
+  same_dot = dots.reduce((result,this_dot)=>{
+    if (result != false) {
+      return result;
+    } else {
+      if (Math.abs(x-this_dot.getAttribute("cx"))<4 && Math.abs(y-this_dot.getAttribute("cy"))<4) {
+        return {x:this_dot.getAttribute("cx"),y:this_dot.getAttribute("cy")};
+      } else {
+        return false;
+      }
+    }
+  },false);
+  if (same_dot == false) {
+    dot.setAttribute("cx", x);
+    dot.setAttribute("cy", y);
+  } else {
+    dot.setAttribute("cx", same_dot.x);
+    dot.setAttribute("cy", same_dot.y);
+  }
   dot.setAttribute("fill", "darkgrey");
   dot.setAttribute("stroke-width", 5);
   if (grid) {
