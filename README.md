@@ -6,5 +6,5 @@ Features:
 - Lines: valley fold, mountain fold, undifferentiated crease, x-ray visible fold, edge of paper
 - Arrows: valley fold, mountain fold, mountain and valley folds with immediate unfolds, push arrow, repeat arrow
 - Sides of Paper: polygon fill tool with two default colours for front and back of paper, fill erase
-- Grid: points at intersections of lines automatically, add arbitrary points manually, basic grid square or isometric when initialising, specify grid density when creating drawing (unimplemented)
+- Grid: points at intersections of lines automatically, add arbitrary points manually, basic grid square or isometric when initialising, specify grid density when initialising
 - Export: as SVG (unimplemented), possibly others (unimplemented)

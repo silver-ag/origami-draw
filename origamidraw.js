@@ -11,7 +11,7 @@ var areas = 0;
 var gridstyle = document.createElement("style");
 gridstyle.innerHTML = ".dot:hover { stroke:grey; }";
 
-function initialise(target, grid_type, size, bg ) {
+function initialise(target, size, grid_type, grid_density, bg) {
   target.innerHTML =
   "<div style='display:flex'>\
     <div style='width:"+size+";height:"+size+"'>\
@@ -71,15 +71,15 @@ function initialise(target, grid_type, size, bg ) {
   document.head.appendChild(gridstyle);
 
   if (grid_type == "square") {
-    for (var x = 0; x < 17; x++) {
-      for (var y = 0; y < 17; y++) {
-        container.grid.appendChild(make_dot((x+0.5)*(size/17),(y+0.5)*(size/17)));
+    for (var x = 0; x < grid_density; x++) {
+      for (var y = 0; y < grid_density; y++) {
+        container.grid.appendChild(make_dot((x+0.5)*(size/grid_density),(y+0.5)*(size/grid_density)));
       }
     }
   } else if (grid_type == "isometric") {
-    for (var x = 0; x < 17; x++) {
-      for (var y = 0; y < 34; y++) {
-        container.grid.appendChild(make_dot(((x+0.5-(0.5*(y%2)))*(0.5/Math.tan(15*Math.PI/180)))*(size/17), (y+0.5)*(size/34)));
+    for (var x = 0; x < grid_density; x++) {
+      for (var y = 0; y < grid_density*2; y++) {
+        container.grid.appendChild(make_dot(((x+0.5-(0.5*(y%2)))*(0.5/Math.tan(15*Math.PI/180)))*(size/grid_density), (y+0.5)*(size/(grid_density*2))));
       }
     }
   }
