@@ -13,12 +13,18 @@
  </div>
  <button id=discardbutton style='display:none' onclick=discard_diagram()>Discard</button>
  <script>
+  var colour_front = "#70fff0";
+  var colour_back = "#82ff85";
   function make_diagram() {
     initialise(document.getElementById("container"),document.getElementById('size').value,document.getElementById('type').value,document.getElementById('density').value,"white");
+    document.getElementById("colour_pick_front").value = colour_front;
+    document.getElementById("colour_pick_back").value = colour_back;
     document.getElementById('discardbutton').style = "";
     document.getElementById('parameters').style = "display:none";
   }
   function discard_diagram() {
+    colour_front = document.getElementById("colour_pick_front").value;
+    colour_back = document.getElementById("colour_pick_back").value;
     document.getElementById("container").innerHTML = "";
     document.getElementById('discardbutton').style = "display:none";
     document.getElementById('parameters').style = "";
