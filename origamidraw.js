@@ -46,7 +46,8 @@ function initialise(target, size, grid_type, grid_density, bg) {
      <span title='Crease'><svg id='toolicon_line_crease' height='30' width='30' onclick=select_tool('line','crease')><rect height=30 width=30 fill=white></rect><line x1=30 y1=0 x2=0 y2=30 style='stroke:black;stroke-width:1'></line></svg></span>\
      <span title='X-Ray'><svg id='toolicon_line_xray' height='30' width='30' onclick=select_tool('line','xray')><rect height=30 width=30 fill=white></rect><line x1=30 y1=0 x2=0 y2=30 style='stroke:black;stroke-width:2;stroke-dasharray:2 3'></line></svg></span>\
      <span title='Edge'><svg id='toolicon_line_edge' height='30' width='30' onclick=select_tool('line','edge')><rect height=30 width=30 fill=white></rect><line x1=30 y1=0 x2=0 y2=30 style='stroke:black;stroke-width:3'></line></svg></span>\
-     &nbsp;&nbsp;&nbsp;<span title='Erase Lines'><svg id='toolicon_line_erase' height='30' width='30' onclick=select_tool('line','erase')><rect height=30 width=30 fill=white></rect><line x1=30 y1=0 x2=0 y2=30 style='stroke:black;stroke-width:3'></line><line x1=15 y1=7 x2=15 y2=23 style='stroke:black;stroke-width:3'></line><line x1=7 y1=15 x2=23 y2=15 style='stroke:black;stroke-width:3'></line></svg>\
+     &nbsp;&nbsp;&nbsp;<span title='Guidelines'><svg id='toolicon_linetools_guides' height=30 width=30 onclick=select_tool('linetools','guides')><rect width=30 height=30 fill=white></rect><path d='M0 15 L30 15 M15 0 L15 30' style='stroke:black;stroke-width:1'></path></svg></span>\
+     <span title='Erase Lines'><svg id='toolicon_line_erase' height='30' width='30' onclick=select_tool('line','erase')><rect height=30 width=30 fill=white></rect><line x1=30 y1=0 x2=0 y2=30 style='stroke:black;stroke-width:3'></line><line x1=15 y1=7 x2=15 y2=23 style='stroke:black;stroke-width:3'></line><line x1=7 y1=15 x2=23 y2=15 style='stroke:black;stroke-width:3'></line></svg>\
      <p>Arrow Tools</p>\
      <span title='Valley'><svg id='toolicon_arrow_valley' height=30 width=30 onclick=select_tool('arrow','valley')><rect height=30 width=30 fill=white></rect><path d='M0 30 Q10 10 30 0' style='stroke:black;stroke-width:2;fill:none'></path><line x1=30 y1=0 x2=20 y2=2 style='stroke:black;stroke-width:2'></line><line x1=30 y1=0 x2=24 y2=8 style='stroke:black;stroke-width:2'></line></svg></span>\
      <span title='Valley Unfolding'><svg id='toolicon_arrow_valleycrease' height=30 width=30 onclick=select_tool('arrow','valleycrease')><rect height=30 width=30 fill=white></rect><path d='M0 30 Q10 10 30 0' style='stroke:black;stroke-width:2;fill:none'></path><line x1=30 y1=0 x2=20 y2=2 style='stroke:black;stroke-width:2'></line><line x1=30 y1=0 x2=24 y2=8 style='stroke:black;stroke-width:2'></line><path d='M0 30 L0 22 L8 28 Z' style='stroke:black;stroke-width:2;fill:white'></path></svg></span>\
@@ -104,10 +105,17 @@ function initialise(target, size, grid_type, grid_density, bg) {
     if (old_element != null) {
       old_element.remove();
     }
+    var old_element = document.getElementById('preview_drawing'); // repeat for the benefit of linetools guides
+    if (old_element != null) {
+      old_element.remove();
+    }
     if (current_tool.type == 'point' && current_tool.subtype == 'freedot') {
       var preview = make_dot(event.clientX-10,event.clientY-10,false);
       preview.id = 'preview_drawing';
       container.grid.appendChild(preview);
+    } else if (current_tool.type == 'linetools' && current_tool.subtype == 'guides') {
+      draw_line(event.clientX-10,0,event.clientX-10,container.any.width.baseVal.value,'crease').id='preview_drawing';
+      draw_line(0,event.clientY-10,container.any.width.baseVal.value,event.clientY-10,'crease').id='preview_drawing';
     } else if (currently_drawing) {
       switch (current_tool.type) {
         case 'line':
@@ -207,6 +215,22 @@ function clicked_dot(dot) {
         } else {
           currently_drawing.coords.push([current_dot_x,current_dot_y]);
         }
+      } else if (current_tool.type == 'linetools' && current_tool.subtype == 'guides') {
+        lines.forEach((line)=>{
+              var ix = intersect(line.getAttribute("x1"),line.getAttribute("y1"),line.getAttribute("x2"),line.getAttribute("y2"),
+                                current_dot_x,0,current_dot_x,container.any.width.baseVal.value);
+              var iy = intersect(line.getAttribute("x1"),line.getAttribute("y1"),line.getAttribute("x2"),line.getAttribute("y2"),
+                                0,current_dot_y,container.any.height.baseVal.value,current_dot_y);
+              if (ix) {
+                var d = make_dot(ix.x,ix.y,false);
+                container.grid.appendChild(d);
+                dots.push(d);
+              }
+              if (iy) {
+                var d = make_dot(iy.x,iy.y,false);
+                container.grid.appendChild(d);
+                dots.push(d);
+              }});
       }
     } else {
       if (current_tool.type == 'area') {
@@ -457,7 +481,8 @@ function intersect(x1,y1,x2,y2,x3,y3,x4,y4) {
 function which_side(x1,y1,x2,y2,x3,y3) {
   // https://stackoverflow.com/questions/1560492/how-to-tell-whether-a-point-is-to-the-right-or-left-side-of-a-line
   var d = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
-  if (Math.abs(d) < 1) { // avoid rounding errors, if it's that close it's probably supposed to be on the line
+  //console.log(x1,y1,x2,y2,x3,y3);
+  if (Math.abs(d) < 500) { // avoid rounding errors, if it's that close it's probably supposed to be on the line. sounds like a lot but it's not
     return 0;
   } else {
     return Math.sign(d);
