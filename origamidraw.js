@@ -219,12 +219,10 @@ function clicked_arrow(arrow_id) {
     if (current_tool.subtype == 'erase') {
       arrow.remove();
     } else if (current_tool.subtype == 'flip') {
-      //console.log(arrow.getAttribute("x1"),arrow.getAttribute("x2"),(arrow.getAttribute("x1").toNumber()+arrow.getAttribute("x2").to));
       if (arrow.getAttribute("transform") == null || arrow.getAttribute("transform") == "") {
         var x1 = parseFloat(arrow.getAttribute("x1")), y1 = parseFloat(arrow.getAttribute("y1")), x2 = parseFloat(arrow.getAttribute("x2")), y2 = parseFloat(arrow.getAttribute("y2"));
-        arrow.setAttribute("transform-origin", ((x1+x2)/2)+" "+((y1+y2)/2));
         // rotate by the inverse of the angle the line makes with the x axis(?)
-        arrow.setAttribute("transform", "scale(-1,1) rotate("+(((y1==y2)?180:0)+((Math.sign(x1-x2)*Math.sign(y1-y2))*(360/Math.PI)*Math.asin(Math.abs(x1-x2)/Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2)))))+")");
+        arrow.setAttribute("transform", "translate("+(((x1+x2)/2))+","+(((y1+y2)/2))+") scale(-1,1) rotate("+(((y1==y2)?180:0)+((Math.sign(x1-x2)*Math.sign(y1-y2))*(360/Math.PI)*Math.asin(Math.abs(x1-x2)/Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2)))))+") translate("+(-((x1+x2)/2))+","+(-((y1+y2)/2))+")");
       } else {
         arrow.setAttribute("transform", "");
       }
@@ -431,6 +429,7 @@ function intersect(x1,y1,x2,y2,x3,y3,x4,y4) {
 function which_side(x1,y1,x2,y2,x3,y3) {
   // https://stackoverflow.com/questions/1560492/how-to-tell-whether-a-point-is-to-the-right-or-left-side-of-a-line
   var d = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+  console.log(d);
   if (Math.abs(d) < 1e-9) { // avoid rounding errors, if it's that close it's probably supposed to be on the line
     return 0;
   } else {
