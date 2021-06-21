@@ -432,14 +432,14 @@ function dont_overlap(new_line) {
     } else {
       to_remove.push(line); // if we remove now it fucks up lines while traversing it
       if ((order[0] == d3 || order[0] == d4) && order[0] != order[1]) {
-        if (x1 == x2) { // also do this bit different
+        if (Math.abs(x1-x2) < 1) { // also do this bit different
           lines.push(draw_line(y_to_x(x1,y1,x2,y2,order[0]),order[0],y_to_x(x1,y1,x2,y2,order[1]),order[1],line.class));
         } else {
           lines.push(draw_line(order[0],x_to_y(x1,y1,x2,y2,order[0]),order[1],x_to_y(x1,y1,x2,y2,order[1]),line.class));
         }
       }
       if ((order[3] == d3 || order[3] == d4) && order[2] != order[3]) {
-        if (x1 == x2) {
+        if (Math.abs(x1-x2) < 1) {
           lines.push(draw_line(y_to_x(x1,y1,x2,y2,order[3]),order[3],y_to_x(x1,y1,x2,y2,order[2]),order[2],line.class));
         } else {
           lines.push(draw_line(order[3],x_to_y(x1,y1,x2,y2,order[3]),order[2],x_to_y(x1,y1,x2,y2,order[2]),line.class));
