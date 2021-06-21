@@ -2,9 +2,26 @@
  <title>Origami Diagramming Tool</title>
  <script src='origamidraw.js'></script>
 </head>
-<body style='background:darkgrey'>
- <div id='container'></div>
+<body style='background:grey'>
+ <div id='container'>
+ </div>
+ <div id=parameters>
+  <p>Size:<input id=size name=size type=number value=500></input></p>
+  <p>Grid Density:<input id=density name=density type=number value=17></input></p>
+  <p>Grid Type:<select id=type name=type value=square><option value=square>Square</option><option value=isometric>Isometric</option></select></p>
+  <button onclick=make_diagram()>Create</button>
+ </div>
+ <button id=discardbutton style='display:none' onclick=discard_diagram()>Discard</button>
  <script>
-  initialise(document.getElementById("container"),500,"square",17,"white");
+  function make_diagram() {
+    initialise(document.getElementById("container"),document.getElementById('size').value,document.getElementById('type').value,document.getElementById('density').value,"white");
+    document.getElementById('discardbutton').style = "";
+    document.getElementById('parameters').style = "display:none";
+  }
+  function discard_diagram() {
+    document.getElementById("container").innerHTML = "";
+    document.getElementById('discardbutton').style = "display:none";
+    document.getElementById('parameters').style = "";
+  }
  </script>
 </body>

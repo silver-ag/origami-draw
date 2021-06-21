@@ -12,11 +12,15 @@ var gridstyle = document.createElement("style");
 gridstyle.innerHTML = ".dot:hover { stroke:grey; }";
 
 function initialise(target, size, grid_type, grid_density, bg) {
+  lines = [];
+  arrows = 0;
+  areas = 0;
+
   target.innerHTML =
   "<div style='display:flex'>\
     <div style='width:"+size+";height:"+size+"'>\
      <svg id=diagram style='position:fixed;' height=" + size + " width=" + size + ">\
-      <defs>\
+      <defs id='diagram_markers'>\
        <marker id='valley_head' markerWidth=20 markerHeight=20 refX=20 refY=10 orient='auto' markerUnits='userSpaceOnUse'>\
         <path d='M20 10 l-15 -5 M20 10 l-15 5' style='stroke:black;stroke-width:2px;fill:none;'></path>\
        </marker>\
@@ -60,9 +64,12 @@ function initialise(target, size, grid_type, grid_density, bg) {
      <p>Point Tools</p>\
      <span title='Free Point'><svg id='toolicon_point_freedot' height='30' width='30' onclick=select_tool('point','freedot')><rect height=30 width=30 fill=white></rect><circle cx=15 cy=15 r=6 fill=darkgrey></circle></svg></span>\
      <span title='Toggle Grid'><svg id='toolicon_point_toggle' height='30' width='30' onclick=toggle_grid()><rect height=30 width=30 style='fill:white'></rect><path d='M15 21 A6 6 0 0 1 15 9 Z' style='fill:darkgrey'></path></svg></span>\
+     <br><br>\
+     <span title='Download'><button onclick='download_svg()'>Download</button></span>\
     </div>\
    </div>";
   container = {any:document.getElementById('diagram'),
+               markers:document.getElementById('diagram_markers'),
                fills:document.getElementById('diagram_fills'),
                lines:document.getElementById('diagram_lines'),
                arrows:document.getElementById('diagram_arrows'),
@@ -130,6 +137,26 @@ function select_tool(type, subtype) {
   currently_drawing = false;
 
   current_tool = {type,subtype};
+}
+
+function download_svg() {
+  // https://stackoverflow.com/questions/23218174/how-do-i-save-export-an-svg-file-after-creating-an-svg-with-d3-js-ie-safari-an
+  var img = document.createElement("svg");
+  // note we're not taking the grid
+  img.appendChild(container.markers.cloneNode(true));
+  img.appendChild(container.fills.cloneNode(true));
+  img.appendChild(container.lines.cloneNode(true));
+  img.appendChild(container.arrows.cloneNode(true));
+  img.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+  var data = img.outerHTML;
+  var blob = new Blob([data],{type:"image/svg+xml;charset=utf-8"});
+  var url = URL.createObjectURL(blob);
+  var download = document.createElement("a");
+  download.href = url;
+  download.download = 'origami_diagram';
+  document.body.appendChild(download);
+  download.click();
+  download.remove();
 }
 
 function clicked_dot() {
