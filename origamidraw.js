@@ -77,7 +77,11 @@ function initialise(target, grid_type, size, bg ) {
       }
     }
   } else if (grid_type == "isometric") {
-    // ...
+    for (var x = 0; x < 17; x++) {
+      for (var y = 0; y < 34; y++) {
+        container.grid.appendChild(make_dot(((x+0.5-(0.5*(y%2)))*(0.5/Math.tan(15*Math.PI/180)))*(size/17), (y+0.5)*(size/34)));
+      }
+    }
   }
 
   container.any.onmousemove = (event)=>{
@@ -263,6 +267,9 @@ function make_line(x1,y1,x2,y2,style) {
   new_element.setAttribute("y1", y1);
   new_element.setAttribute("x2", x2);
   new_element.setAttribute("y2", y2);
+  if (isNaN(x1) || isNaN(new_element.getAttribute("x1"))) { // there's an intermittent bug, if this triggers it'll tell us more about it
+    console.log("line drawing bug occurred: ",x1,y1,x2,y2);
+  }
   new_element.style = style;
   return new_element;
 }
