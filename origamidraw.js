@@ -63,6 +63,7 @@ function initialise(target, size, grid_type, grid_density, bg) {
      <span title='Choose Colour Back'><input id=colour_pick_back type=color value=#d0d0ff></input></span>\
      <p>Point Tools</p>\
      <span title='Free Point'><svg id='toolicon_point_freedot' height='30' width='30' onclick=select_tool('point','freedot')><rect height=30 width=30 fill=white></rect><circle cx=15 cy=15 r=6 fill=darkgrey></circle></svg></span>\
+     <span title='Erase Point'><svg id='toolicon_point_erase' height='30' width='30' onclick=select_tool('point','erase')><rect height=30 width=30 fill=white></rect><circle cx=15 cy=15 r=6 fill=darkgrey></circle><path d='M8 8 L22 22 M8 22 L22 8' style='stroke:black;stroke-width:2'></path></svg></span>\
      <span title='Toggle Grid'><svg id='toolicon_point_toggle' height='30' width='30' onclick=toggle_grid()><rect height=30 width=30 style='fill:white'></rect><path d='M15 21 A6 6 0 0 1 15 9 Z' style='fill:darkgrey'></path></svg></span>\
      <br><br>\
      <span title='Download'><button onclick='download_svg()'>Download</button></span>\
@@ -80,13 +81,13 @@ function initialise(target, size, grid_type, grid_density, bg) {
   if (grid_type == "square") {
     for (var x = 0; x < grid_density; x++) {
       for (var y = 0; y < grid_density; y++) {
-        container.grid.appendChild(make_dot((x+0.5)*(size/grid_density),(y+0.5)*(size/grid_density)));
+        container.grid.appendChild(make_dot((x+0.5)*(size/grid_density),(y+0.5)*(size/grid_density),true));
       }
     }
   } else if (grid_type == "isometric") {
     for (var x = 0; x < grid_density; x++) {
       for (var y = 0; y < grid_density*2; y++) {
-        container.grid.appendChild(make_dot(((x+0.5-(0.5*(y%2)))*(0.5/Math.tan(15*Math.PI/180)))*(size/grid_density), (y+0.5)*(size/(grid_density*2))));
+        container.grid.appendChild(make_dot(((x+0.5-(0.5*(y%2)))*(0.5/Math.tan(15*Math.PI/180)))*(size/grid_density), (y+0.5)*(size/(grid_density*2)),true));
       }
     }
   }
@@ -97,7 +98,7 @@ function initialise(target, size, grid_type, grid_density, bg) {
       old_element.remove();
     }
     if (current_tool.type == 'point' && current_tool.subtype == 'freedot') {
-      var preview = make_dot(event.clientX-10,event.clientY-10);
+      var preview = make_dot(event.clientX-10,event.clientY-10,false);
       preview.id = 'preview_drawing';
       container.grid.appendChild(preview);
     } else if (currently_drawing) {
@@ -115,7 +116,7 @@ function initialise(target, size, grid_type, grid_density, bg) {
   }};
   container.any.onclick = (event)=>{
     if (current_tool.type == 'point' && current_tool.subtype == 'freedot') {
-      var newdot = make_dot(event.clientX-10,event.clientY-10);
+      var newdot = make_dot(event.clientX-10,event.clientY-10,false);
       container.grid.appendChild(newdot);
     }
   };
@@ -159,8 +160,8 @@ function download_svg() {
   download.remove();
 }
 
-function clicked_dot() {
-  if (!(current_tool.type == 'point' && current_tool.subtype == 'freedot')) {
+function clicked_dot(dot) {
+  if (current_tool.type != 'point') {
     if (currently_drawing) {
       var old_element = document.getElementById('preview_drawing'); // clean up the preview line without waiting for the user to move the mouse again
       if (old_element != null && current_tool.type != 'area') {
@@ -171,7 +172,7 @@ function clicked_dot() {
           var i = intersect(line.getAttribute("x1"),line.getAttribute("y1"),line.getAttribute("x2"),line.getAttribute("y2"),
                             currently_drawing.fromx,currently_drawing.fromy,current_dot_x,current_dot_y);
           if (i) {
-            container.grid.appendChild(make_dot(i.x,i.y));
+            container.grid.appendChild(make_dot(i.x,i.y,false));
           }});
         var new_line = draw_line(currently_drawing.fromx, currently_drawing.fromy, current_dot_x, current_dot_y, current_tool.subtype);
         dont_overlap(new_line);
@@ -200,6 +201,12 @@ function clicked_dot() {
         currently_drawing = {'coords':[[current_dot_x,current_dot_y]]};
       } else {
         currently_drawing = {'fromx':current_dot_x,'fromy':current_dot_y};
+      }
+    }
+  } else {
+    if (current_tool.subtype == 'erase') {
+      if (dot.class != 'default_grid') {
+        dot.remove();
       }
     }
   }
@@ -301,7 +308,7 @@ function make_line(x1,y1,x2,y2,style) {
   return new_element;
 }
 
-function make_dot(x,y) {
+function make_dot(x,y,grid) {
   var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
   dot.setAttribute("class", "dot");
   dot.setAttribute("r", 4.5);
@@ -309,9 +316,12 @@ function make_dot(x,y) {
   dot.setAttribute("cy", y);
   dot.setAttribute("fill", "darkgrey");
   dot.setAttribute("stroke-width", 5);
+  if (grid) {
+    dot.class = 'default_grid';
+  }
   dot.onmouseover = ((x,y)=>{return ()=>{current_dot_x = x; current_dot_y = y;}})(x,y);
-  dot.onmouseout = function(){current_dot_x = false; current_dot_y = false;}
-  dot.onclick = clicked_dot;
+  dot.onmouseout = ()=>{current_dot_x = false; current_dot_y = false;}
+  dot.onclick = ((dot)=>{return ()=>{clicked_dot(dot)}})(dot);
   return dot;
 }
 
