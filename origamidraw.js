@@ -7,6 +7,7 @@ var currently_drawing = false;
 var current_tool = {type:'line',subtype:'edge'};
 var lines = [];
 var arrows = 0;
+var areas = 0;
 var gridstyle = document.createElement("style");
 gridstyle.innerHTML = ".dot:hover { stroke:grey; }";
 
@@ -49,6 +50,13 @@ function initialise(target, grid_type, size, bg ) {
      <span title='Repeat'><svg id='toolicon_arrow_repeat' height=30 width=30 onclick=select_tool('arrow','repeat')><rect height=30 width=30 fill=white></rect><path d='M0 30 L30 0 L16 5 M25 14 L30 0 M8 12 L18 22' style='stroke:black;stroke-width:2;fill:none'></svg></span>\
      &nbsp;&nbsp;&nbsp;<span title='Flip Arrow'><svg id='toolicon_arrowmod_flip' height=30 width=30 onclick=select_tool('arrowmod','flip')><rect height=30 width=30 fill=white></rect><path d='M0 30 Q23 23 30 0 L29 11 M30 0 L22 8' style='stroke:grey;stroke-width:2;fill:none'></path><path d='M0 30 Q7 7 30 0 L19 1 M30 0 L22 7' style='stroke:black;stroke-width:2;fill:none'></path></svg></span>\
      <span title='Erase Arrow'><svg id='toolicon_arrowmod_erase' height=30 width=30 onclick=select_tool('arrowmod','erase')><rect height=30 width=30 fill=white></rect><path d='M0 30 Q7 7 30 0 L19 1 M30 0 L22 7 M4 11 L18 11 M11 4 L11 18' style='stroke:black;stroke-width:2;fill:none'></path></svg></span>\
+     <p>Area Tools</p>\
+     <span title='Area Fill Front'><svg id='toolicon_area_fillfront' height=30 width=30 onclick=select_tool('area','fillfront')><rect height=30 width=30 fill=white></rect><polygon points='8,8 8,23 20,15 18,9 8,8' style='fill:green'></polygon></svg></span>\
+     <span title='Choose Colour Front'><input id=colour_pick_front type=color value=#ffffff></input></span>\
+     &nbsp;&nbsp;&nbsp;<span title='Area Erase'><svg id='toolicon_areamod_erase' height=30 width=30 onclick=select_tool('areamod','erase')><rect height=30 width=30 fill=white></rect><polygon points='8,8 8,23 20,15 18,9 8,8' style='fill:green'></polygon><path d='M8 8 L 18 18 M 8 18 L 18 8' style='stroke:black;stroke-width:2;fill:none'></path></svg></span>\
+     <br>\
+     <span title='Area Fill Back'><svg id='toolicon_area_fillback' height=30 width=30 onclick=select_tool('area','fillback')><rect height=30 width=30 fill=white></rect><polygon points='8,8 8,23 20,15 18,9 8,8' style='fill:green'></polygon></svg></span>\
+     <span title='Choose Colour Back'><input id=colour_pick_back type=color value=#d0d0ff></input></span>\
      <p>Point Tools</p>\
      <span title='Free Point'><svg id='toolicon_point_freedot' height='30' width='30' onclick=select_tool('point','freedot')><rect height=30 width=30 fill=white></rect><circle cx=15 cy=15 r=6 fill=darkgrey></circle></svg></span>\
      <span title='Toggle Grid'><svg id='toolicon_point_toggle' height='30' width='30' onclick=toggle_grid()><rect height=30 width=30 style='fill:white'></rect><path d='M15 21 A6 6 0 0 1 15 9 Z' style='fill:darkgrey'></path></svg></span>\
@@ -89,6 +97,9 @@ function initialise(target, grid_type, size, bg ) {
         case 'arrow':
           draw_arrow(currently_drawing.fromx, currently_drawing.fromy, event.clientX-10, event.clientY-10, current_tool.subtype).id='preview_drawing';
           break;
+        case 'area':
+          draw_area(currently_drawing.coords.concat([[event.clientX-10,event.clientY-10]]), document.getElementById((current_tool.subtype == 'fillfront')?'colour_pick_front':'colour_pick_back').value).id='preview_drawing';
+          break;
      }
   }};
   container.any.onclick = (event)=>{
@@ -109,9 +120,6 @@ function toggle_grid() {
   }
 }
 
-
-
-
 function select_tool(type, subtype) {
   document.getElementById('toolicon_'+current_tool.type+'_'+current_tool.subtype).style='';
   document.getElementById('toolicon_'+type+'_'+subtype).style='border-style:solid';
@@ -124,7 +132,7 @@ function clicked_dot() {
   if (!(current_tool.type == 'point' && current_tool.subtype == 'freedot')) {
     if (currently_drawing) {
       var old_element = document.getElementById('preview_drawing'); // clean up the preview line without waiting for the user to move the mouse again
-      if (old_element != null) {
+      if (old_element != null && current_tool.type != 'area') {
         old_element.remove();
       }
       if (current_tool.type == 'line') {
@@ -141,12 +149,27 @@ function clicked_dot() {
         } else {
           lines.push(new_line);
         }
+        currently_drawing = false;
       } else if (current_tool.type == 'arrow') {
         draw_arrow(currently_drawing.fromx, currently_drawing.fromy, current_dot_x, current_dot_y, current_tool.subtype);
+        currently_drawing = false;
+      } else if (current_tool.type == 'area') {
+        //console.log(currently_drawing.coords,current_dot_x,current_dot_y,currently_drawing.coords.includes([current_dot_x,current_dot_y]));
+        // can't use coords.includes because in js [1,2] != [1,2]
+        if (currently_drawing.coords.reduce((result,point)=>{if (result) { return result; } else { return (point[0]==current_dot_x&&point[1]==current_dot_y);}}, false)) {
+          draw_area(currently_drawing.coords.concat([[current_dot_x,current_dot_y]]),document.getElementById((current_tool.subtype == 'fillfront')?'colour_pick_front':'colour_pick_back').value);
+          currently_drawing = false;
+          old_element.remove();
+        } else {
+          currently_drawing.coords.push([current_dot_x,current_dot_y]);
+        }
       }
-      currently_drawing = false;
     } else {
-      currently_drawing = {'fromx':current_dot_x,'fromy':current_dot_y};
+      if (current_tool.type == 'area') {
+        currently_drawing = {'coords':[[current_dot_x,current_dot_y]]};
+      } else {
+        currently_drawing = {'fromx':current_dot_x,'fromy':current_dot_y};
+      }
     }
   }
 }
@@ -167,6 +190,12 @@ function clicked_arrow(arrow_id) {
         arrow.setAttribute("transform", "");
       }
     }
+  }
+}
+
+function clicked_area(area_id) {
+  if (current_tool.type == 'areamod' && current_tool.subtype == 'erase') {
+    document.getElementById(area_id).remove();
   }
 }
 
@@ -222,6 +251,12 @@ function draw_arrow(x1,y1,x2,y2,type) {
   return arrow;
 }
 
+function draw_area(coords, colour) {
+  var new_area = make_area(coords, colour);
+  container.fills.appendChild(new_area);
+  return new_area;
+}
+
 function make_line(x1,y1,x2,y2,style) {
   var new_element = document.createElementNS("http://www.w3.org/2000/svg", "line");
   new_element.setAttribute("x1", x1);
@@ -267,6 +302,16 @@ function make_arrow(x1,y1,x2,y2,headtype,bodytype,tailtype) {
   arrow.onclick=((arrows)=>{return ()=>{clicked_arrow('arrow_'+arrows)}})(arrows);
   arrows++;
   return arrow;
+}
+
+function make_area(coords, colour) {
+  var area = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  area.setAttribute("points", coords.reduce((result,point)=>{return result+(" "+point[0]+","+point[1]);}));
+  area.setAttribute("style", "fill:"+colour);
+  area.id = "area_" + areas;
+  area.onclick = ((areas)=>{return ()=>{clicked_area("area_"+areas)}})(areas);
+  areas++;
+  return area;
 }
 
 function dont_overlap(new_line) {
