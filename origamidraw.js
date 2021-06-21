@@ -397,7 +397,7 @@ function dont_overlap(new_line) {
   var x3 = line.getAttribute("x1"), y3 = line.getAttribute("y1"), x4 = line.getAttribute("x2"), y4 = line.getAttribute("y2");
   if (colinear(x1,y1,x2,y2,x3,y3,x4,y4)) {
     console.log(x1,x2);
-    if (Math.abs(x1-x2) < 1e-9) { // special case where we can't use x position to order points on the line uniquely. imprecise in case someone constructs two points that should be directly above each other but floating points get in the way
+    if (Math.abs(x1-x2) < 1) { // special case where we can't use x position to order points on the line uniquely. imprecise in case someone constructs two points that should be directly above each other but floating points get in the way - you can't draw a line with both x and y < 1 because of the minimum point displacement
       var d1 = y1, d2 = y2, d3 = y3, d4 = y4;
     } else {
       var d1 = x1, d2 = x2, d3 = x3, d4 = x4;
@@ -457,7 +457,7 @@ function intersect(x1,y1,x2,y2,x3,y3,x4,y4) {
 function which_side(x1,y1,x2,y2,x3,y3) {
   // https://stackoverflow.com/questions/1560492/how-to-tell-whether-a-point-is-to-the-right-or-left-side-of-a-line
   var d = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
-  if (Math.abs(d) < 1e-9) { // avoid rounding errors, if it's that close it's probably supposed to be on the line
+  if (Math.abs(d) < 1) { // avoid rounding errors, if it's that close it's probably supposed to be on the line
     return 0;
   } else {
     return Math.sign(d);
