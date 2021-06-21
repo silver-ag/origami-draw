@@ -360,7 +360,7 @@ function dont_overlap(new_line) {
       var d1 = x1, d2 = x2, d3 = x3, d4 = x4;
     }
     var order = [d1,d2,d3,d4].sort((a,b)=>{return a-b;});
-    if ((order[0]==d1 && order[1]==d2) || (order[0]==d2 && order[1]==d1) || (order[0]==d3 && order[1]==d4) || (order[0]==d4 && order[1]==d3)) {
+    if ((order[0]==d1 && order[1]==d2) || (order[0]==d2 && order[1]==d1) || (order[0]==d3 && order[1]==d4) || (order[0]==d4 && order[1]==d3) || order[1] == order[2]) {
       // no overlap
     } else {
       to_remove.push(line); // if we remove now it fucks up lines while traversing it
