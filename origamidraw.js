@@ -52,6 +52,7 @@ function initialise(target, size, grid_type, grid_density, bg) {
      <span title='Mountain Unfolding'><svg id='toolicon_arrow_mountaincrease' height=30 width=30 onclick=select_tool('arrow','mountaincrease')><rect height=30 width=30 fill=white></rect><path d='M0 30 Q10 10 30 0 L18 1 L20 5' style='stroke:black;stroke-width:2;fill:none'></path><path d='M0 30 L0 22 L8 28 Z' style='stroke:black;stroke-width:2;fill:white'></path></svg></span>\
      <span title='Push'><svg id='toolicon_arrow_push' height=30 width=30 onclick=select_tool('arrow','push')><rect height=30 width=30 fill=white></rect><path d='M0 22 L13 9 L11 7 L30 0 L23 19 L21 17 L8 30 L0 22' style='stroke:black;stroke-width:2;fill:none'></path></svg></span>\
      <span title='Repeat'><svg id='toolicon_arrow_repeat' height=30 width=30 onclick=select_tool('arrow','repeat')><rect height=30 width=30 fill=white></rect><path d='M0 30 L30 0 L16 5 M25 14 L30 0 M8 12 L18 22' style='stroke:black;stroke-width:2;fill:none'></svg></span>\
+     <span title='Turn Over'><svg id='toolicon_arrow_turnover' height=30 width=30 onclick=select_tool('arrow','turnover')><rect height=30 width=30 fill=white></rect><path d='M0 30 Q7 7 30 0 L18 2 M30 0 L22 8' style='stroke:black;stroke-width:3;fill:none'></path><circle cx=15 cy=15 r=6 style='stroke:black;stroke-width:3;fill:none'></circle></svg></span>\
      &nbsp;&nbsp;&nbsp;<span title='Flip Arrow'><svg id='toolicon_arrowmod_flip' height=30 width=30 onclick=select_tool('arrowmod','flip')><rect height=30 width=30 fill=white></rect><path d='M0 30 Q23 23 30 0 L29 11 M30 0 L22 8' style='stroke:grey;stroke-width:2;fill:none'></path><path d='M0 30 Q7 7 30 0 L19 1 M30 0 L22 7' style='stroke:black;stroke-width:2;fill:none'></path></svg></span>\
      <span title='Erase Arrow'><svg id='toolicon_arrowmod_erase' height=30 width=30 onclick=select_tool('arrowmod','erase')><rect height=30 width=30 fill=white></rect><path d='M0 30 Q7 7 30 0 L19 1 M30 0 L22 7 M4 11 L18 11 M11 4 L11 18' style='stroke:black;stroke-width:2;fill:none'></path></svg></span>\
      <p>Area Tools</p>\
@@ -283,6 +284,9 @@ function draw_arrow(x1,y1,x2,y2,type) {
     case 'push':
       var head='none', body='push', tail='none';
       break;
+    case 'turnover':
+      var head='valley', body='turnover', tail='none';
+      break;
   }
   var arrow = make_arrow(x1,y1,x2,y2,head,body,tail);
   container.arrows.appendChild(arrow);
@@ -337,6 +341,9 @@ function make_arrow(x1,y1,x2,y2,headtype,bodytype,tailtype) {
   } else if (bodytype == 'push') {
     arrow.setAttribute("d", "M" + (x1-((y1-y2)/5)) + " " + (y1-((x2-x1)/5)) + " L" + (((x1+x2)/2)-((y1-y2)/5)) + " " + (((y1+y2)/2)-((x2-x1)/5)) + " L" + (((x1+x2)/2)-((y1-y2)/3)) + " " + (((y1+y2)/2)-((x2-x1)/3)) + " L" + x2 + " " + y2 + " L" + (((x1+x2)/2)+((y1-y2)/3)) + " " + (((y1+y2)/2)+((x2-x1)/3)) + " L" + (((x1+x2)/2)+((y1-y2)/5)) + " " + (((y1+y2)/2)+((x2-x1)/5)) + " L" + (x1+((y1-y2)/5)) + " " + (y1+((x2-x1)/5)) + " Z");
     arrow.setAttribute("style", "stroke:black;stroke-width:2;fill:white;");
+  } else if (bodytype == 'turnover') {
+    arrow.setAttribute("d", "M" + (((x1+x2)/2)-((y1-y2)/4)) + " " + (((y1+y2)/2)-((x2-x1)/4)) + " A" + (Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2))/4) + " " + (Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2))/4) + " 0 1 0 " + (((x1+x2)/2)+((y1-y2)/4)) + " " + (((y1+y2)/2)+((x2-x1)/4)) + " A" + (Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2))/4) + " " + (Math.sqrt(Math.pow(x1-x2,2)+Math.pow(y1-y2,2))/4) + " 0 1 0 " + (((x1+x2)/2)-((y1-y2)/4)) + " " + (((y1+y2)/2)-((x2-x1)/4)) + " M" + x1 + " " + y1 + " Q" + (((x1+x2)/2)-((y1-y2)/2)) + " " + (((y1+y2)/2)-((x2-x1)/2)) + " " + x2 + " " + y2);
+    arrow.setAttribute("style", "stroke:black;stroke-width:3;fill:none;marker-end:url(#"+headtype+"_head);"+((tailtype=='unfold')?"marker-start:url(#unfold_tail)":""));
   } else {
     arrow.setAttribute("d", "M" + x1 + " " + y1 + " Q" + (((x1+x2)/2)-((y1-y2)/4)) + " " + (((y1+y2)/2)-((x2-x1)/4)) + " " + x2 + " " + y2);
     arrow.setAttribute("style", "stroke:black;stroke-width:2;fill:none;marker-end:url(#"+headtype+"_head);"+((tailtype=='unfold')?"marker-start:url(#unfold_tail)":""));
