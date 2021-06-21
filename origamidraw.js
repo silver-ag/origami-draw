@@ -169,12 +169,14 @@ function clicked_dot(dot) {
         old_element.remove();
       }
       if (current_tool.type == 'line') {
-        lines.forEach((line)=>{
-          var i = intersect(line.getAttribute("x1"),line.getAttribute("y1"),line.getAttribute("x2"),line.getAttribute("y2"),
-                            currently_drawing.fromx,currently_drawing.fromy,current_dot_x,current_dot_y);
-          if (i) {
-            container.grid.appendChild(make_dot(i.x,i.y,false));
-          }});
+        if (current_tool.subtype != 'erase') {
+          lines.forEach((line)=>{
+            var i = intersect(line.getAttribute("x1"),line.getAttribute("y1"),line.getAttribute("x2"),line.getAttribute("y2"),
+                              currently_drawing.fromx,currently_drawing.fromy,current_dot_x,current_dot_y);
+            if (i) {
+              container.grid.appendChild(make_dot(i.x,i.y,false));
+            }});
+        }
         var new_line = draw_line(currently_drawing.fromx, currently_drawing.fromy, current_dot_x, current_dot_y, current_tool.subtype);
         dont_overlap(new_line);
         if (current_tool.subtype == 'erase') {
