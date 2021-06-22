@@ -12,6 +12,7 @@ OrigamiDraw is a grid-based svg editor with tools for drawing the lines and arro
 ### Usage Notes:
 - Fill tool works by clicking points to define a polygon. Click a point that's already part of it to finish (typically double click the last point or go back around to the first).
 - Your colour choices are preserved when discarding a drawing.
+- To avoid drawing lines that are distinct but inseperable by eye, points cannot be arbitrarily close together. This is why the point drawing tool snaps onto the grid.
 - Line drawing occassionally misbehaves. Temporarily adding other colinear lines might help make it work if this happens.
 - Ensure that index.html and origamidraw.js are in the same folder.
 - Tested in firefox.
