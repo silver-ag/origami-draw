@@ -372,7 +372,9 @@ function draw_line(x1,y1,x2,y2,type) {
       break
   }
   new_element.setAttribute("class", type);
-  container.lines.appendChild(new_element);
+  if (x1 != x2 || y1 != y2) {
+    container.lines.appendChild(new_element);
+  }
   return new_element;
 }
 
