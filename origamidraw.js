@@ -140,6 +140,59 @@ function initialise(target, size, grid_type, grid_density, bg) {
   select_tool('line','edge');
 }
 
+function initialise_with_svg(target, svg, type, density) {
+  var uploaded_svg = document.createElement("div");
+  uploaded_svg.innerHTML = svg;
+  var uploaded_fills = uploaded_svg.children[0].children[1];
+  var uploaded_lines = uploaded_svg.children[0].children[2];
+  var uploaded_arrows = uploaded_svg.children[0].children[3];
+  initialise(target, uploaded_fills.children[0].width.baseVal.value, type, density, 'white');
+  container.fills.innerHTML = uploaded_fills.innerHTML;
+  [...container.fills.children].forEach((fill)=>{
+    if (fill.nodeName == "polygon") {
+      [...fill.points].forEach((p)=>{
+        var d = make_dot(p.x,p.y,false);
+        container.grid.appendChild(d);
+        dots.push(d);
+      });
+      fill.id = "area_" + areas;
+      fill.onclick = ((areas)=>{return ()=>{clicked_area("area_"+areas)}})(areas);
+      areas++;
+    }
+  });
+  container.lines.innerHTML = uploaded_lines.innerHTML;
+  [...container.lines.children].forEach((line)=>{
+    lines.forEach((l)=>{
+      var i = intersect(line.getAttribute("x1"),line.getAttribute("y1"),line.getAttribute("x2"),line.getAttribute("y2"),
+                        l.getAttribute("x1"),l.getAttribute("y1"),l.getAttribute("x2"),l.getAttribute("y2"));
+      if (i) {
+        var d = make_dot(i.x,i.y,false);
+        container.grid.appendChild(d);
+        dots.push(d);
+      }
+    });
+    var d1 = make_dot(line.getAttribute("x1"),line.getAttribute("y1"),false);
+    var d2 = make_dot(line.getAttribute("x2"),line.getAttribute("y2"),false);
+    container.grid.appendChild(d1);
+    container.grid.appendChild(d2);
+    dots.push(d1);
+    dots.push(d2);
+    lines.push(line);
+  });
+  container.arrows.innerHTML = uploaded_arrows.innerHTML;
+  [...container.arrows.children].forEach((arrow)=>{
+    arrow.id = 'arrow_' + arrows;
+    arrow.onclick=((arrows)=>{return ()=>{clicked_arrow('arrow_'+arrows)}})(arrows);
+    arrows++;
+    var d1 = make_dot(arrow.getAttribute("x1"),arrow.getAttribute("y1"),false);
+    var d2 = make_dot(arrow.getAttribute("x2"),arrow.getAttribute("y2"),false);
+    container.grid.appendChild(d1);
+    container.grid.appendChild(d2);
+    dots.push(d1);
+    dots.push(d2);
+  });
+}
+
 function toggle_grid() {
   if (gridstyle.innerHTML == ".dot:hover { stroke:grey; }") {
     gridstyle.innerHTML = ".dot { visibility:hidden; }";
@@ -206,7 +259,6 @@ function clicked_dot(dot) {
         draw_arrow(currently_drawing.fromx, currently_drawing.fromy, current_dot_x, current_dot_y, current_tool.subtype);
         currently_drawing = false;
       } else if (current_tool.type == 'area') {
-        //console.log(currently_drawing.coords,current_dot_x,current_dot_y,currently_drawing.coords.includes([current_dot_x,current_dot_y]));
         // can't use coords.includes because in js [1,2] != [1,2]
         if (currently_drawing.coords.reduce((result,point)=>{if (result) { return result; } else { return (point[0]==current_dot_x&&point[1]==current_dot_y);}}, false)) {
           draw_area(currently_drawing.coords.concat([[current_dot_x,current_dot_y]]),document.getElementById((current_tool.subtype == 'fillfront')?'colour_pick_front':'colour_pick_back').value);
@@ -292,7 +344,7 @@ function draw_line(x1,y1,x2,y2,type) {
       var new_element = make_line(x1,y1,x2,y2,"stroke:gainsboro;stroke-width:3");
       break
   }
-  new_element.class = type;
+  new_element.setAttribute("class", type);
   container.lines.appendChild(new_element);
   return new_element;
 }
@@ -420,7 +472,6 @@ function dont_overlap(new_line) {
   lines.forEach((line)=>{
   var x3 = line.getAttribute("x1"), y3 = line.getAttribute("y1"), x4 = line.getAttribute("x2"), y4 = line.getAttribute("y2");
   if (colinear(x1,y1,x2,y2,x3,y3,x4,y4)) {
-    console.log(x1,x2);
     if (Math.abs(x1-x2) < 1) { // special case where we can't use x position to order points on the line uniquely. imprecise in case someone constructs two points that should be directly above each other but floating points get in the way - you can't draw a line with both x and y < 1 because of the minimum point displacement
       var d1 = y1, d2 = y2, d3 = y3, d4 = y4;
     } else {
@@ -433,16 +484,16 @@ function dont_overlap(new_line) {
       to_remove.push(line); // if we remove now it fucks up lines while traversing it
       if ((order[0] == d3 || order[0] == d4) && order[0] != order[1]) {
         if (Math.abs(x1-x2) < 1) { // also do this bit different
-          lines.push(draw_line(y_to_x(x1,y1,x2,y2,order[0]),order[0],y_to_x(x1,y1,x2,y2,order[1]),order[1],line.class));
+          lines.push(draw_line(y_to_x(x1,y1,x2,y2,order[0]),order[0],y_to_x(x1,y1,x2,y2,order[1]),order[1],line.getAttribute("class")));
         } else {
-          lines.push(draw_line(order[0],x_to_y(x1,y1,x2,y2,order[0]),order[1],x_to_y(x1,y1,x2,y2,order[1]),line.class));
+          lines.push(draw_line(order[0],x_to_y(x1,y1,x2,y2,order[0]),order[1],x_to_y(x1,y1,x2,y2,order[1]),line.getAttribute("class")));
         }
       }
       if ((order[3] == d3 || order[3] == d4) && order[2] != order[3]) {
         if (Math.abs(x1-x2) < 1) {
-          lines.push(draw_line(y_to_x(x1,y1,x2,y2,order[3]),order[3],y_to_x(x1,y1,x2,y2,order[2]),order[2],line.class));
+          lines.push(draw_line(y_to_x(x1,y1,x2,y2,order[3]),order[3],y_to_x(x1,y1,x2,y2,order[2]),order[2],line.getAttribute("class")));
         } else {
-          lines.push(draw_line(order[3],x_to_y(x1,y1,x2,y2,order[3]),order[2],x_to_y(x1,y1,x2,y2,order[2]),line.class));
+          lines.push(draw_line(order[3],x_to_y(x1,y1,x2,y2,order[3]),order[2],x_to_y(x1,y1,x2,y2,order[2]),line.getAttribute("class")));
         }
       }
     }
@@ -481,7 +532,6 @@ function intersect(x1,y1,x2,y2,x3,y3,x4,y4) {
 function which_side(x1,y1,x2,y2,x3,y3) {
   // https://stackoverflow.com/questions/1560492/how-to-tell-whether-a-point-is-to-the-right-or-left-side-of-a-line
   var d = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
-  //console.log(x1,y1,x2,y2,x3,y3);
   if (Math.abs(d) < 500) { // avoid rounding errors, if it's that close it's probably supposed to be on the line. sounds like a lot but it's not
     return 0;
   } else {

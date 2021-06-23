@@ -9,7 +9,8 @@
   <p>Size:<input id=size name=size type=number value=500></input></p>
   <p>Grid Density:<input id=density name=density type=number value=17></input></p>
   <p>Grid Type:<select id=type name=type value=square><option value=square>Square</option><option value=isometric>Isometric</option></select></p>
-  <button onclick=make_diagram()>Create</button>
+  <button onclick=make_diagram()>Create</button><br>
+  <input id=fileinput type="file" onchange=load_diagram()></input>
  </div>
  <button id=discardbutton style='display:none' onclick=discard_diagram()>Discard</button>
  <script>
@@ -28,6 +29,24 @@
     document.getElementById("container").innerHTML = "";
     document.getElementById('discardbutton').style = "display:none";
     document.getElementById('parameters').style = "";
+  }
+  function load_diagram() {
+    var file = document.getElementById("fileinput").files[0];
+    if (file.type == "image/svg+xml") {
+      var reader = new FileReader();
+      reader.onload = ()=>{
+        if (confirm("I can't infer grid information from uploaded files, the values you have specified will be used (type: "+document.getElementById('type').value+", density: "+document.getElementById('density').value+")")) {
+          initialise_with_svg(document.getElementById('container'),reader.result, document.getElementById('type').value,document.getElementById('density').value);
+          document.getElementById("colour_pick_front").value = colour_front;
+          document.getElementById("colour_pick_back").value = colour_back;
+          document.getElementById('discardbutton').style = "";
+          document.getElementById('parameters').style = "display:none";
+        }
+      }
+      reader.readAsText(file);
+    } else {
+      alert("file must be an svg, and strange things may happen if it's not one that was made in this tool");
+    }
   }
  </script>
 </body>
