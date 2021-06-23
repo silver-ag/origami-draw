@@ -7,6 +7,7 @@ var currently_drawing = false;
 var current_tool = {type:'line',subtype:'edge'};
 var lines = [];
 var dots = [];
+var labels = {};
 var arrows = 0;
 var areas = 0;
 var gridstyle = document.createElement("style");
@@ -36,6 +37,7 @@ function initialise(target, size, grid_type, grid_density, bg) {
       <g id='diagram_fills'> <rect width=" + size + " height=" + size + " fill=" + bg +"></rect> </g>\
       <g id='diagram_lines'></g>\
       <g id='diagram_arrows'></g>\
+      <g id='diagram_text'></g>\
       <g id='diagram_grid'></g>\
      </svg>\
     </div>\
@@ -69,6 +71,9 @@ function initialise(target, size, grid_type, grid_density, bg) {
      <span title='Free Point'><svg id='toolicon_point_freedot' height='30' width='30' onclick=select_tool('point','freedot')><rect height=30 width=30 fill=white></rect><circle cx=15 cy=15 r=6 fill=darkgrey></circle></svg></span>\
      <span title='Erase Point'><svg id='toolicon_point_erase' height='30' width='30' onclick=select_tool('point','erase')><rect height=30 width=30 fill=white></rect><circle cx=15 cy=15 r=6 fill=darkgrey></circle><path d='M8 8 L22 22 M8 22 L22 8' style='stroke:black;stroke-width:2'></path></svg></span>\
      <span title='Toggle Grid'><svg id='toolicon_point_toggle' height='30' width='30' onclick=toggle_grid()><rect height=30 width=30 style='fill:white'></rect><path d='M15 21 A6 6 0 0 1 15 9 Z' style='fill:darkgrey'></path></svg></span>\
+     <p>Text Tools</p>\
+     <span title='Label'><svg id='toolicon_text_label' height=30 width=30 onclick=select_tool('text','label')><rect width=30 height=30 fill=white></rect><text x=6 y=24 font-size='x-large'>A</text></svg></span>\
+     <span title='Font Size'><input id=label_font_size type=number value=18></input></span>\
      <br><br>\
      <span title='Download'><button onclick='download_svg()'>Download</button></span>\
     </div>\
@@ -78,6 +83,7 @@ function initialise(target, size, grid_type, grid_density, bg) {
                fills:document.getElementById('diagram_fills'),
                lines:document.getElementById('diagram_lines'),
                arrows:document.getElementById('diagram_arrows'),
+               text:document.getElementById('diagram_text'),
                grid:document.getElementById('diagram_grid')};
 
   document.head.appendChild(gridstyle);
@@ -146,6 +152,7 @@ function initialise_with_svg(target, svg, type, density) {
   var uploaded_fills = uploaded_svg.children[0].children[1];
   var uploaded_lines = uploaded_svg.children[0].children[2];
   var uploaded_arrows = uploaded_svg.children[0].children[3];
+  var uploaded_text = uploaded_svg.children[0].children[4];
   initialise(target, uploaded_fills.children[0].width.baseVal.value, type, density, 'white');
   container.fills.innerHTML = uploaded_fills.innerHTML;
   [...container.fills.children].forEach((fill)=>{
@@ -191,6 +198,14 @@ function initialise_with_svg(target, svg, type, density) {
     dots.push(d1);
     dots.push(d2);
   });
+  container.text.innerHTML = uploaded_text.innerHTML;
+  [...container.text.children].forEach((label)=>{
+    var x = label.getAttribute("x"), y = label.getAttribute("y");
+    var d = make_dot(x,y,false);
+    container.grid.appendChild(d);
+    dots.push(d);
+    labels[x+','+y] = label;
+  });
 }
 
 function toggle_grid() {
@@ -217,6 +232,7 @@ function download_svg() {
   img.appendChild(container.fills.cloneNode(true));
   img.appendChild(container.lines.cloneNode(true));
   img.appendChild(container.arrows.cloneNode(true));
+  img.appendChild(container.text.cloneNode(true));
   img.setAttribute("xmlns", "http://www.w3.org/2000/svg")
   var data = img.outerHTML;
   var blob = new Blob([data],{type:"image/svg+xml;charset=utf-8"});
@@ -287,6 +303,17 @@ function clicked_dot(dot) {
     } else {
       if (current_tool.type == 'area') {
         currently_drawing = {'coords':[[current_dot_x,current_dot_y]]};
+      } else if (current_tool.type == 'text' && current_tool.subtype == 'label') {
+        var current_label = labels[current_dot_x+','+current_dot_y];
+        if (current_label == null) {
+          current_label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          current_label.setAttribute("x", current_dot_x);
+          current_label.setAttribute("y", current_dot_y);
+          container.text.appendChild(current_label);
+          labels[current_dot_x+','+current_dot_y] = current_label;
+        }
+        current_label.setAttribute("font-size", document.getElementById('label_font_size').value);
+        current_label.innerHTML = prompt("Set Label:",current_label.innerHTML);
       } else {
         currently_drawing = {'fromx':current_dot_x,'fromy':current_dot_y};
       }
